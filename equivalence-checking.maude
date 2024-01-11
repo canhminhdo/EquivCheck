@@ -38,9 +38,10 @@ fmod EQUIV-CHECKING is
     var S : Scalar .
     vars A : Action .
     vars AL AL' : ActionList .
+    vars MAX IDX : Nat .
     vars N N' N1 N2 N3 N4 : Nat .
     vars M M' M1 M2 M3 M4 M5 : Matrix .
-    vars V V' Phi : Matrix .
+    vars V V0 V' V0' Phi : Matrix .
     vars B0' B1' B2' B3' : Matrix .
 
     --- N -> I (x) I (x) ...
@@ -200,24 +201,44 @@ fmod EQUIV-CHECKING is
     if N := findN(AL AL') .
 
     op checkWithBasis : ActionList ActionList Nat -> Bool .
-    eq checkWithBasis(AL, AL', N) = checkWithBasis(AL, AL', N, 2 ^ N) .
+    eq checkWithBasis(AL, AL', N) = checkWithBasis(AL, AL', N, 2 ^ N, 0) .
     
-    op checkWithBasis : ActionList ActionList Nat Nat -> Bool .
-    eq checkWithBasis(AL, AL', N, 0) = true .
-    ceq checkWithBasis(AL, AL', N, N') = if (V x (V)^+) == (V' x (V')^+) then checkWithBasis(AL, AL', N, N' - 1) else false fi
-    if N' > 0
-    /\ Phi := basis(N' - 1, N)
+    --- first check
+    op checkWithBasis : ActionList ActionList Nat Nat Nat -> Bool .
+    ceq checkWithBasis(AL, AL', N, MAX, 0) = 
+    if (V x (V)^+) == (V' x (V')^+) then 
+        checkWithBasis*(AL, AL', N, MAX, 1, V, V')
+    else 
+        false 
+    fi
+    if Phi := basis(0, N)
     /\ V := calWithBasis(AL, Phi, N)
-    /\ V' := calWithBasis(AL', Phi, N)
-    [print "[CheckBasis] N = " N "\nN' = " N' "\nPhi = " Phi "\nV = " V "\nV' = " V'] .
+    /\ V' := calWithBasis(AL', Phi, N) .
+
+    --- subsequent check
+    op checkWithBasis* : ActionList ActionList Nat Nat Nat Matrix Matrix -> Bool .
+    ceq checkWithBasis*(AL, AL', N, MAX, IDX, V0, V0') =
+    if (V x (V)^+) == (V' x (V')^+) then 
+        if (V0 x (V)^+) == (V0' x (V')^+) then
+            checkWithBasis*(AL, AL', N, MAX, IDX + 1, V0, V0')
+        else
+            false
+        fi 
+    else
+        false
+    fi
+    if IDX < MAX
+    /\ Phi := basis(IDX, N)
+    /\ V := calWithBasis(AL, Phi, N)
+    /\ V' := calWithBasis(AL', Phi, N) .
+    eq checkWithBasis*(AL, AL', N, MAX, IDX, V0, V0') = true [owise] .
 
     --- calculate M x V
     op calWithBasis : ActionList Matrix Nat -> Matrix .
     eq calWithBasis(nil, V, N) = V .
     ceq calWithBasis(A AL, V, N) = calWithBasis(AL, V', N)
     if M := buildUnitary(A, N)
-    /\ V' := M x V 
-    [print "A = " A "\nM = " M "\nV' =" V'] .
+    /\ V' := M x V .
 
     --- prepare a basis vector V
     op basis : Nat Nat -> Matrix .
@@ -244,14 +265,14 @@ fmod EQUIV-CHECKING is
     eq replaceI(M) = replaceI*(M) [owise] .
     eq replaceI*(S . M) = S . replaceI**(M) .
     eq replaceI*(M) = replaceI**(M) [owise] .
-    ceq replaceI**(B0' (x) M) = B0 (x) replaceI**(M) if B0' := B0 .
-    ceq replaceI**(B1' (x) M) = B1 (x) replaceI**(M) if B1' := B1 .
-    ceq replaceI**(B2' (x) M) = B2 (x) replaceI**(M) if B2' := B2 .
-    ceq replaceI**(B3' (x) M) = B3 (x) replaceI**(M) if B3' := B3 .
+    eq replaceI**(B0' (x) M) = B0 (x) replaceI**(M) .
+    eq replaceI**(B1' (x) M) = B1 (x) replaceI**(M) .
+    eq replaceI**(B2' (x) M) = B2 (x) replaceI**(M) .
+    eq replaceI**(B3' (x) M) = B3 (x) replaceI**(M) .
     eq replaceI**(I (x) M) = (B0 + B3) (x) replaceI**(M) .
-    ceq replaceI**(B0') = B0 if B0' := B0 .
-    ceq replaceI**(B1') = B1 if B1' := B1 .
-    ceq replaceI**(B2') = B2 if B2' := B2 .
-    ceq replaceI**(B3') = B3 if B3' := B3 .
+    eq replaceI**(B0') = B0 .
+    eq replaceI**(B1') = B1 .
+    eq replaceI**(B2') = B2 .
+    eq replaceI**(B3') = B3 .
     eq replaceI**(I) = (B0 + B3) .
 endfm
