@@ -33,4 +33,5 @@ We found a counterexample for the quivalence of quantum circuits used to represe
 Readers can see the counterexample at the end of case-studies.maude file for more details.
 
 ## Publication
+- Canh Minh Do and Kazuhiro Ogata, "**Theoretical Foundation for Equivalence Checking of Quantum Circuits**", In The 2nd International Workshop on Formal Analysis and Verification of Post-Quantum Cryptographic Protocols, 2023. [[PDF]]()
 - TBA
