@@ -33,6 +33,7 @@ endfm
 fmod EQUIV-CHECKING is
     pr ACTION-LIST .
     pr MATRIX .
+    pr SET{Nat} * (sort NeSet{Nat} to NeIdxSet, sort Set{Nat} to IdxSet) .
 
     var BL : Bool .
     var S : Scalar .
@@ -43,6 +44,13 @@ fmod EQUIV-CHECKING is
     vars M M' M1 M2 M3 M4 M5 : Matrix .
     vars V V0 V' V0' Phi : Matrix .
     vars B0' B1' B2' B3' : Matrix .
+    vars IF : Info .
+    vars IS : IdxSet .
+
+    sort Info .
+    op const:_ : IdxSet -> Info [ctor] .
+    op getConst : Info -> IdxSet .
+    eq getConst(const: IS) = IS .
 
     --- N -> I (x) I (x) ...
     op I[_] : Nat -> Matrix .
@@ -196,42 +204,62 @@ fmod EQUIV-CHECKING is
     eq findN*(CCZ(N1, N2, N3) AL, N4) = findN*(AL, max(max(max(N1, N2), N3), N4)) .
     eq findN*(CSWAP(N1, N2, N3) AL, N4) = findN*(AL, max(max(max(N1, N2), N3), N4)) .
 
-    op checkEquiv : ActionList ActionList -> Bool .
-    ceq checkEquiv(AL, AL') = checkWithBasis(AL, AL', N)
+    op checkEquiv : ActionList ActionList Info -> Bool .
+    ceq checkEquiv(AL, AL', IF) = checkWithBasis(AL, AL', IF, N)
     if N := findN(AL AL') .
 
-    op checkWithBasis : ActionList ActionList Nat -> Bool .
-    eq checkWithBasis(AL, AL', N) = checkWithBasis(AL, AL', N, 2 ^ N, 0) .
+    op checkEquiv : ActionList ActionList -> Bool .
+    ceq checkEquiv(AL, AL') = checkWithBasis(AL, AL', (const: empty), N)
+    if N := findN(AL AL') .
+
+    op checkWithBasis : ActionList ActionList Info Nat -> Bool .
+    eq checkWithBasis(AL, AL', IF, N) = checkWithBasis(AL, AL', IF, N, 2 ^ N, 0) .
     
     --- first check
-    op checkWithBasis : ActionList ActionList Nat Nat Nat -> Bool .
-    ceq checkWithBasis(AL, AL', N, MAX, 0) = 
+    op checkWithBasis : ActionList ActionList Info Nat Nat Nat -> Bool .
+    ceq checkWithBasis(AL, AL', IF, N, MAX, 0) = 
     if (V x (V)^+) == (V' x (V')^+) then 
-        checkWithBasis*(AL, AL', N, MAX, 1, V, V')
+        checkWithBasis*(AL, AL', IF, N, MAX, 1, V, V')
     else 
-        false 
+        false
     fi
     if Phi := basis(0, N)
     /\ V := calWithBasis(AL, Phi, N)
     /\ V' := calWithBasis(AL', Phi, N) .
 
     --- subsequent check
-    op checkWithBasis* : ActionList ActionList Nat Nat Nat Matrix Matrix -> Bool .
-    ceq checkWithBasis*(AL, AL', N, MAX, IDX, V0, V0') =
+    op checkWithBasis* : ActionList ActionList Info Nat Nat Nat Matrix Matrix -> Bool .
+    ceq checkWithBasis*(AL, AL', IF, N, MAX, IDX, V0, V0') =
+    if (isValid(IDX, N, getConst(IF))) then
+        checkWithBasis**(AL, AL', IF, N, MAX, IDX, V0, V0')
+    else
+        checkWithBasis*(AL, AL', IF, N, MAX, IDX + 1, V0, V0')
+    fi
+    if IDX < MAX .
+    eq checkWithBasis*(AL, AL', IF, N, MAX, IDX, V0, V0') = true [owise] .
+
+    --- check with a valid basis
+    op checkWithBasis** : ActionList ActionList Info Nat Nat Nat Matrix Matrix -> Bool .
+    ceq checkWithBasis**(AL, AL', IF, N, MAX, IDX, V0, V0') =
     if (V x (V)^+) == (V' x (V')^+) then 
         if (V0 x (V)^+) == (V0' x (V')^+) then
-            checkWithBasis*(AL, AL', N, MAX, IDX + 1, V0, V0')
+            checkWithBasis*(AL, AL', IF, N, MAX, IDX + 1, V0, V0')
         else
             false
         fi 
     else
         false
     fi
-    if IDX < MAX
-    /\ Phi := basis(IDX, N)
+    if Phi := basis(IDX, N)
     /\ V := calWithBasis(AL, Phi, N)
     /\ V' := calWithBasis(AL', Phi, N) .
-    eq checkWithBasis*(AL, AL', N, MAX, IDX, V0, V0') = true [owise] .
+    --- [print "\nPhi = " Phi "\nV = " V "\nV' = " V' "\nV0 = " V0 "\nV0' = " V0'] .
+
+    --- whether this basis is needed for checking
+    op isValid : Nat Nat IdxSet -> Bool .
+    eq isValid(IDX, N, empty) = true . 
+    eq isValid(IDX, N, (N', IS)) = 
+    if ((IDX & (1 << (N - N' - 1))) > 0) then false else isValid(IDX, N, IS) fi .
 
     --- calculate M x V
     op calWithBasis : ActionList Matrix Nat -> Matrix .
