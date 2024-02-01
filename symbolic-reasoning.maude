@@ -1,110 +1,6 @@
-fmod SCALAR is
-    pr CONVERSION .
-    pr EXT-BOOL .
-
-    sorts Real Scalar .
-    subsort Rat Real < Scalar .
-
-    --- imaginary unit
-    op i : -> Scalar [ctor].
-
-    --- basic operators
-    op _.*_ : Scalar Scalar -> Scalar [comm assoc prec 32] .
-    op _./_ : Scalar Scalar -> Scalar [prec 31] .
-    op _.+_ : Scalar Scalar -> Scalar [comm assoc prec 33] .
-    op (_)^* : Scalar -> Scalar [prec 30] .
-
-    --- comparative operators
-    op _.>_ : Real Real -> Bool .
-    op _.>=_ : Real Real -> Bool .
-    op _.<_ : Real Real -> Bool .
-    op _.<=_ : Real Real -> Bool .
-
-    --- error scalar
-    op errS : -> [Scalar] .
-
-    --- some functions
-    op Abs : Scalar -> Real .
-    op Sqrt : Scalar -> Scalar .
-    op Pow : Scalar Rat -> Scalar .
-
-    vars R R1 R2 : Rat .
-    vars PR PR' : PosRat .
-    vars S S1 S2 S3 S4 : Scalar .
-    vars N : Nat .
-
-    --- imaginary properties
-    eq i .* i = -1 .
-    eq Abs(i) = 1 .
-    --- absolute values of a postive number is a positive number
-    eq Abs((Abs(S))) = Abs(S) .
-    eq Abs((Pow(Abs(S), N))) = Pow(Abs(S), N) .
-
-    --- Pow properties
-    eq Pow(R1, R2) = (R1)^(R2) .
-
-    --- rational number calculation.
-    eq R1 .* R2 = R1 * R2 .
-    eq R1 ./ R2 = R1 / R2 .
-    eq R1 .+ R2 = R1 + R2 .
-    eq R1 .< R2 = R1 < R2 .
-    eq R1 .<= R2 = R1 <= R2 .
-    eq R1 .> R2 = R1 > R2 .
-    eq R1 .>= R2 = R1 >= R2 .
-
-    --- c . c* = |c|^2
-    eq S .* (S)^* = Pow(Abs(S), 2) .
-
-    --- distributive properties
-    eq S1 .* (S2 .+ S3) = S1 .* S2 .+ S1 .* S3 .
-
-    --- constructing normal form: R .* S
-    ceq (S .* R1 .+ S .* R2) = S .* (R1 .+ R2) if not S :: Rat .
-    ceq S .+ R .* S = S .* (R .+ 1) if not S :: Rat .
-    ceq S .+ S = S .* 2 if not S :: Rat .
-
-    --- constructing normal form: S1 .* (1 ./ S2)
-    ceq S1 ./ S2 = S1 .* (1 ./ S2) if not S1 :: Rat .
-    ceq R ./ S = R .* (1 ./ S) if not S :: Rat /\ R =/= 1 .
-
-    --- multiplicative properties
-    eq S .* 1 = S .
-    eq S .* 0 = 0 .
-    ceq S .* (1 ./ S) = 1 if not S :: Rat .
-    ceq (1 ./ S1) .* (1 ./ S2) = 1 ./ (S1 .* S2)
-    if not S1 :: Rat /\ not S2 :: Rat .
-    ceq S1 .* (1 ./ (S1 .* S2)) = 1 ./ S2
-    if not S1 :: Rat /\ not S2 :: Rat .
-
-    --- additive properties
-    eq S .+ 0 = S .
-
-    --- fraction properties
-    eq 0 ./ S = 0 .
-    eq S ./ 1 = S .
-    ceq S ./ 0 = errS if S =/= 0 .
-    eq 1 ./ (1 ./ S) =  S .
-    eq 1 ./ (S1 .* (1 ./ S2)) =  S2 .* (1 ./ S1) .
-    eq 1 ./ (S .* (R1 / R2)) =  (R2 / R1) .* (1 ./ S) .
-
-    --- Sqrt calculation
-    eq Sqrt(- 1) = i .
-    eq Sqrt(1) = 1 .
-    eq Sqrt(0) = 0 .
-    eq Sqrt(PR) .* Sqrt(PR) = PR .
-    eq Sqrt(PR / PR') = Sqrt(PR) .* (1 ./ Sqrt(PR')) .
-    eq Sqrt(PR) .* (PR' / PR) = PR' .* (1 ./ Sqrt(PR)) .
-
-    --- transpose of Sqrt
-    eq (Sqrt(PR))^* = Sqrt(PR) .
-    eq (S1 .* S2)^* = (S1)^* .* (S2)^* .
-    eq (S1 ./ S2)^* = (S1)^* ./ (S2)^* .
-    eq (S1 .+ S2)^* = (S1)^* .+ (S2)^* .
-    eq (R)^* = R .
-endfm
+load cpx.maude
 
 fmod DIRAC is
-    pr SCALAR .
     sorts Ket Bra .
 
     ops |0> |1> : -> Ket [ctor] .
@@ -112,6 +8,7 @@ fmod DIRAC is
 endfm
 
 fmod MATRIX is
+    pr CPX .
     pr DIRAC .
     sorts Matrix .
     subsorts Ket Bra < Matrix .
@@ -125,7 +22,7 @@ fmod MATRIX is
     --- error matrix
     op errM : -> Matrix [ctor] .
     --- scalar multiplication with matrix
-    op _._ : Scalar Matrix -> Matrix [prec 31] .
+    op _._ : Cpx Matrix -> Matrix [prec 31] .
     --- matrix product
     op _x_ : Matrix Matrix -> Matrix [assoc prec 31] .
     --- matrix addition
@@ -136,7 +33,7 @@ fmod MATRIX is
     op (_)^+ : Matrix -> Matrix [prec 30] .
 
     vars M M1 M2 M3 M4 : Matrix .
-    vars S S1 S2 : Scalar .
+    vars S S1 S2 : Cpx .
 
     --- zero matrix properties
     eq 0 . M = O .
@@ -214,11 +111,11 @@ fmod MATRIX is
     --- basic gates
     ops X Y Z H S T CX CY CZ SWAP CCX CCZ CSWAP : -> Matrix .
     eq X = B1 + B2 .
-    eq Y = ((-1) .* i) . B1 + i . B2 .
+    eq Y = ((-1) .* (1 i)) . B1 + (1 i) . B2 .
     eq Z = B0  + (-1) . B3 .
-    eq H = 1 ./ Sqrt(2) . B0 + 1 ./ Sqrt(2) . B1 + 1 ./ Sqrt(2) . B2 + (-1) ./ Sqrt(2) . B3 .
-    eq S = B0 + i . B3 .
-    eq T = B0 + ((1 + i) ./ Sqrt(2)) . B3 .
+    eq H = 1 ./ sqrt(2) . B0 + 1 ./ sqrt(2) . B1 + 1 ./ sqrt(2) . B2 + (-1) ./ sqrt(2) . B3 .
+    eq S = B0 + (1 i) . B3 .
+    eq T = B0 + ((1 + (1 i)) ./ sqrt(2)) . B3 .
     eq CX = B0 (x) I + B3 (x) X .
     eq CY = B0 (x) I + B3 (x) Y .
     eq CZ = B0 (x) I + B3 (x) Z .

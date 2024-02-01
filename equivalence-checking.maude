@@ -36,7 +36,7 @@ fmod EQUIV-CHECKING is
     pr SET{Nat} * (sort NeSet{Nat} to NeIdxSet, sort Set{Nat} to IdxSet) .
 
     var BL : Bool .
-    var S : Scalar .
+    var S : Cpx .
     vars A : Action .
     vars AL AL' : ActionList .
     vars MAX IDX : Nat .

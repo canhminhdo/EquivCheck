@@ -29,8 +29,8 @@ We successfully verify the equivalence of quantum circuits for some case studies
 
 We verify not only the equivalence of quantum circuits for the case studies, but also successfully verify the non-equivalence of modified quantum circuits for the case studies, where we randomly remove a gate from their circuits or randomly change indices to which a gate can be applied.
 
-We found a counterexample for the quivalence of quantum circuits used to represent Superdense coding as a state transfer, although they were reported as equivalent quantum circuits in literature.
-Readers can see the counterexample at the end of case-studies.maude file for more details.
+We found that some quantum circuits used to represent Superdense coding as a state transfer are non-equivalent unless constant inputs are considered.
+Readers can see them at the end of case-studies.maude file for more details.
 
 ## Publication
 - Canh Minh Do and Kazuhiro Ogata, "**Theoretical Foundation for Equivalence Checking of Quantum Circuits**", In The 2nd International Workshop on Formal Analysis and Verification of Post-Quantum Cryptographic Protocols, 2023. [[PDF]](https://github.com/canhminhdo/EquivCheck/blob/main/publications/Theoretical-Foundation-for-Equivalence-Checking-of-Quantum-Circuits.pdf)
