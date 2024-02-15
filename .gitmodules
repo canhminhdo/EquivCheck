@@ -1,0 +1,3 @@
+[submodule "AS4QC"]
+	path = AS4QC
+	url = https://github.com/canhminhdo/AS4QC.git

@@ -1,4 +1,4 @@
-load equivalence-checking.maude
+load equiv-check.maude
 load debug.maude
 
 ***********************************************************************************

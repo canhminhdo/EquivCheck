@@ -1,0 +1,181 @@
+load AS4QC/qc.maude
+
+fmod ACTION is
+    pr QC .
+    pr NAT .
+
+    sort Action .
+
+    --- actions
+    op I`(_`) : Nat -> Action .
+    op X`(_`) : Nat -> Action .
+    op Y`(_`) : Nat -> Action .
+    op Z`(_`) : Nat -> Action .
+    op H`(_`) : Nat -> Action .
+    op S`(_`) : Nat -> Action .
+    op T`(_`) : Nat -> Action .
+    op CX`(_,_`) : Nat Nat -> Action .
+    op CY`(_,_`) : Nat Nat -> Action .
+    op CZ`(_,_`) : Nat Nat -> Action .
+    op SWAP`(_,_`) : Nat Nat -> Action .
+    op CCX`(_,_,_`) : Nat Nat Nat -> Action .
+    op CCZ`(_,_,_`) : Nat Nat Nat -> Action .
+    op CSWAP`(_,_,_`) : Nat Nat Nat -> Action .
+
+    vars N N1 N2 N3 : Nat .
+
+    --- actions to gates
+    op actToGates : Action -> Mat .
+    eq actToGates(I(N)) = I(N) .
+    eq actToGates(X(N)) = X(N) .
+    eq actToGates(Y(N)) = Y(N) .
+    eq actToGates(Z(N)) = Z(N) .
+    eq actToGates(H(N)) = H(N) .
+    eq actToGates(S(N)) = S(N) .
+    eq actToGates(T(N)) = T(N) .
+    eq actToGates(CX(N1, N2)) = CX(N1, N2) .
+    eq actToGates(CY(N1, N2)) = CY(N1, N2) .
+    eq actToGates(CZ(N1, N2)) = CZ(N1, N2) .
+    eq actToGates(SWAP(N1, N2)) = SWAP(N1, N2) .
+    eq actToGates(CCX(N1, N2, N3)) = CCX(N1, N2, N3) .
+    eq actToGates(CCZ(N1, N2, N3)) = CCZ(N1, N2, N3) .
+    eq actToGates(CSWAP(N1, N2, N3)) = CSWAP(N1, N2, N3) .
+endfm
+
+view Action from TRIV to ACTION is
+    sort Elt to Action .
+endv
+
+fmod ACTION-LIST is
+    pr LIST{Action} * (
+        sort NeList{Action} to NeActionList,
+        sort List{Action} to ActionList
+    ) .
+endfm
+
+fmod INFO is
+    sort Info .
+    pr SET{Nat} * (sort NeSet{Nat} to NeIdxSet, sort Set{Nat} to IdxSet) .
+    
+    vars IS : IdxSet .
+
+    --- information for constant inputs
+    op const:_ : IdxSet -> Info [ctor] .
+    op getConst : Info -> IdxSet .
+    eq getConst(const: IS) = IS .
+endfm
+
+fmod EQUIV-CHECK is
+    pr ACTION-LIST .
+    pr INFO .
+
+    vars A : Action .
+    vars AL AL' : ActionList .
+    vars MAX IDX : Nat .
+    vars N N' N1 N2 N3 N4 : Nat .
+    vars M : Mat .
+    vars V V0 V' V0' Phi : Vect .
+    vars IF : Info .
+    vars IS : IdxSet .
+
+    --- equivalence checking
+    op checkEquiv : ActionList ActionList Info -> Bool .
+    ceq checkEquiv(AL, AL', IF) = checkWithBasis(AL, AL', IF, N)
+    if N := findN(AL AL') .
+
+    op checkEquiv : ActionList ActionList -> Bool .
+    ceq checkEquiv(AL, AL') = checkWithBasis(AL, AL', (const: empty), N)
+    if N := findN(AL AL') .
+
+    op checkWithBasis : ActionList ActionList Info Nat -> Bool .
+    eq checkWithBasis(AL, AL', IF, N) = checkWithBasis(AL, AL', IF, N, 2 ^ N, 0) .
+    
+    --- first check
+    op checkWithBasis : ActionList ActionList Info Nat Nat Nat -> Bool .
+    ceq checkWithBasis(AL, AL', IF, N, MAX, 0) = 
+    if (V x (V)^+) == (V' x (V')^+) then 
+        checkWithBasis*(AL, AL', IF, N, MAX, 1, V, V')
+    else 
+        false
+    fi
+    if Phi := basis(0, N)
+    /\ V := calWithBasis(AL, Phi)
+    /\ V' := calWithBasis(AL', Phi) .
+
+    --- subsequent check
+    op checkWithBasis* : ActionList ActionList Info Nat Nat Nat Vect Vect -> Bool .
+    ceq checkWithBasis*(AL, AL', IF, N, MAX, IDX, V0, V0') =
+    if (isValid(IDX, N, getConst(IF))) then
+        checkWithBasis**(AL, AL', IF, N, MAX, IDX, V0, V0')
+    else
+        checkWithBasis*(AL, AL', IF, N, MAX, IDX + 1, V0, V0')
+    fi
+    if IDX < MAX .
+    eq checkWithBasis*(AL, AL', IF, N, MAX, IDX, V0, V0') = true [owise] .
+
+    --- check with a valid basis
+    op checkWithBasis** : ActionList ActionList Info Nat Nat Nat Vect Vect -> Bool .
+    ceq checkWithBasis**(AL, AL', IF, N, MAX, IDX, V0, V0') =
+    if (V x (V)^+) == (V' x (V')^+) then 
+        if (V0 x (V)^+) == (V0' x (V')^+) then
+            checkWithBasis*(AL, AL', IF, N, MAX, IDX + 1, V0, V0')
+        else
+            false
+        fi 
+    else
+        false
+    fi
+    if Phi := basis(IDX, N)
+    /\ V := calWithBasis(AL, Phi)
+    /\ V' := calWithBasis(AL', Phi) .
+    --- [print "\nPhi = " Phi "\nV = " V "\nV' = " V' "\nV0 = " V0 "\nV0' = " V0'] .
+
+    --- whether this basis is needed for checking
+    op isValid : Nat Nat IdxSet -> Bool .
+    eq isValid(IDX, N, empty) = true . 
+    eq isValid(IDX, N, (N', IS)) = 
+    if ((IDX & (1 << (N - N' - 1))) > 0) then false else isValid(IDX, N, IS) fi .
+
+    --- calculate M x V
+    op calWithBasis : ActionList Vect -> Vect .
+    eq calWithBasis(nil, V) = V .
+    ceq calWithBasis(A AL, V) = calWithBasis(AL, V')
+    if M := actToGates(A)
+    /\ V' := M x V .
+
+    --- prepare a basis vector V
+    op nilV : -> Vect .
+    eq V (x) nilV = V .
+    eq nilV (x) V = V .
+    
+    op basis : Nat Nat -> Vect .
+    op basis : Nat Nat Vect -> Vect .
+    eq basis(N1, N2) = basis(N1, N2, nilV) .
+    ceq basis(N1, N2, V) =  if (N1 & 1) == 0 then 
+        basis(N1 >> 1, N2 - 1, |0> (x) V) 
+    else 
+        basis(N1 >> 1, N2 - 1, |1> (x) V)
+    fi
+    if N2 > 0 .
+    eq basis(N1, 0, V) = V .
+
+    --- find the number of qubits
+    op findN : ActionList -> Nat .
+    op findN* : ActionList Nat -> Nat .
+    eq findN(AL) = findN*(AL, 0) .
+    eq findN*(nil, N) = N + 1 .
+    eq findN*(I(N1) AL, N2) = findN*(AL, max(N1, N2)) .
+    eq findN*(X(N1) AL, N2) = findN*(AL, max(N1, N2)) .
+    eq findN*(Y(N1) AL, N2) = findN*(AL, max(N1, N2)) .
+    eq findN*(Z(N1) AL, N2) = findN*(AL, max(N1, N2)) .
+    eq findN*(H(N1) AL, N2) = findN*(AL, max(N1, N2)) .
+    eq findN*(S(N1) AL, N2) = findN*(AL, max(N1, N2)) .
+    eq findN*(T(N1) AL, N2) = findN*(AL, max(N1, N2)) .
+    eq findN*(CX(N1, N2) AL, N3) = findN*(AL, max(max(N1, N2), N3)) .
+    eq findN*(CY(N1, N2) AL, N3) = findN*(AL, max(max(N1, N2), N3)) .
+    eq findN*(CZ(N1, N2) AL, N3) = findN*(AL, max(max(N1, N2), N3)) .
+    eq findN*(SWAP(N1, N2) AL, N3) = findN*(AL, max(max(N1, N2), N3)) .
+    eq findN*(CCX(N1, N2, N3) AL, N4) = findN*(AL, max(max(max(N1, N2), N3), N4)) .
+    eq findN*(CCZ(N1, N2, N3) AL, N4) = findN*(AL, max(max(max(N1, N2), N3), N4)) .
+    eq findN*(CSWAP(N1, N2, N3) AL, N4) = findN*(AL, max(max(max(N1, N2), N3), N4)) .
+endfm

@@ -4,9 +4,13 @@ This repository presents a support tool developed in Maude to check the equivale
 
 ## Dependencies
 - Maude is a programming/specification language based on rewriting logic. How to download and install Maude can be found [here](http://maude.cs.illinois.edu/w/index.php/The_Maude_System).
+- An algebraic specification for quantum computation (AS4QC) as a submodule in this repository.
 
 ## How to install
 - Clone the source code to your computer and go to the source code directory.
+```console
+git clone --recurse-submodules https://github.com/canhminhdo/EquivCheck.git && cd EquivCheck
+```
 
 - Feed a Maude file that is the formal specification of quantum circuits being verified into Maude.
 
