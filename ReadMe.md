@@ -1,6 +1,6 @@
 # Equivalence Checking of Quantum Circuits Based on Dirac Notation
 
-This repository presents a tool called |QCEC> for _Q_uantum _C_ircuit _E_quivalence _C_hecking based on Dirac notation in Maude.
+This repository presents a tool called |QCEC> for Quantum Circuit Equivalence Checking based on Dirac notation in Maude.
 
 ## Dependencies
 - Maude is a programming/specification language based on rewriting logic. How to download and install Maude can be found [here](http://maude.cs.illinois.edu/w/index.php/The_Maude_System).
