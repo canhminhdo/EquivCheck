@@ -1,4 +1,4 @@
-load AS4QC/qc.maude
+load ket-as4qc/qc.maude
 
 fmod ACTION is
     pr QC .

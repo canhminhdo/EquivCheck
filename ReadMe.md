@@ -4,12 +4,12 @@ This repository presents a tool called |QCEC> for <u>Q</u>uantum <u>C</u>ircuit 
 
 ## Dependencies
 - Maude is a programming/specification language based on rewriting logic. How to download and install Maude can be found [here](http://maude.cs.illinois.edu/w/index.php/The_Maude_System).
-- An algebraic specification for quantum computation (AS4QC) as a submodule in this repository.
+- An algebraic specification for quantum computation ([|AS4QC>](https://github.com/canhminhdo/ket-as4qc)) as a submodule in this repository.
 
 ## How to install
 - Clone the source code to your computer and go to the source code directory.
 ```console
-git clone --recurse-submodules https://github.com/canhminhdo/EquivCheck.git && cd EquivCheck
+git clone --recurse-submodules https://github.com/canhminhdo/ket-qcec.git && cd ket-qcec
 ```
 
 - Feed a Maude file that is the formal specification of quantum circuits being verified into Maude.
