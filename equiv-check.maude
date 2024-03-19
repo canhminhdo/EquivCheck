@@ -93,14 +93,14 @@ fmod EQUIV-CHECK is
     --- first check
     op firstCheck : ActionList ActionList Info Nat Nat Nat -> Bool .
     ceq firstCheck(AL, AL', IF, N, MAX, 0) = 
-    if (V x (V)^+) == (V' x (V')^+) then 
-        nextCheck(AL, AL', IF, N, MAX, 1, V, V')
+    if (V0 x (V0)^+) == (V0' x (V0')^+) then 
+        nextCheck(AL, AL', IF, N, MAX, 1, V0, V0')
     else 
         false
     fi
     if Phi := basis(0, N)
-    /\ V := calWithBasis(AL, Phi)
-    /\ V' := calWithBasis(AL', Phi) .
+    /\ V0 := calWithBasis(AL, Phi)
+    /\ V0' := calWithBasis(AL', Phi) .
 
     --- subsequent check
     op nextCheck : ActionList ActionList Info Nat Nat Nat Vect Vect -> Bool .
