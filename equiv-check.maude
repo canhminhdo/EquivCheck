@@ -79,22 +79,22 @@ fmod EQUIV-CHECK is
     vars IS : IdxSet .
 
     --- equivalence checking
-    op checkEquiv : ActionList ActionList Info -> Bool .
-    ceq checkEquiv(AL, AL', IF) = checkWithBasis(AL, AL', IF, N)
+    op equivCheck : ActionList ActionList Info -> Bool .
+    ceq equivCheck(AL, AL', IF) = checkWithBasis(AL, AL', IF, N)
     if N := findN(AL AL') .
 
-    op checkEquiv : ActionList ActionList -> Bool .
-    ceq checkEquiv(AL, AL') = checkWithBasis(AL, AL', (const: empty), N)
+    op equivCheck : ActionList ActionList -> Bool .
+    ceq equivCheck(AL, AL') = checkWithBasis(AL, AL', (const: empty), N)
     if N := findN(AL AL') .
 
     op checkWithBasis : ActionList ActionList Info Nat -> Bool .
-    eq checkWithBasis(AL, AL', IF, N) = checkWithBasis(AL, AL', IF, N, 2 ^ N, 0) .
+    eq checkWithBasis(AL, AL', IF, N) = firstCheck(AL, AL', IF, N, 2 ^ N, 0) .
     
     --- first check
-    op checkWithBasis : ActionList ActionList Info Nat Nat Nat -> Bool .
-    ceq checkWithBasis(AL, AL', IF, N, MAX, 0) = 
+    op firstCheck : ActionList ActionList Info Nat Nat Nat -> Bool .
+    ceq firstCheck(AL, AL', IF, N, MAX, 0) = 
     if (V x (V)^+) == (V' x (V')^+) then 
-        checkWithBasis*(AL, AL', IF, N, MAX, 1, V, V')
+        nextCheck(AL, AL', IF, N, MAX, 1, V, V')
     else 
         false
     fi
@@ -103,22 +103,22 @@ fmod EQUIV-CHECK is
     /\ V' := calWithBasis(AL', Phi) .
 
     --- subsequent check
-    op checkWithBasis* : ActionList ActionList Info Nat Nat Nat Vect Vect -> Bool .
-    ceq checkWithBasis*(AL, AL', IF, N, MAX, IDX, V0, V0') =
-    if (isValid(IDX, N, getConst(IF))) then
-        checkWithBasis**(AL, AL', IF, N, MAX, IDX, V0, V0')
+    op nextCheck : ActionList ActionList Info Nat Nat Nat Vect Vect -> Bool .
+    ceq nextCheck(AL, AL', IF, N, MAX, IDX, V0, V0') =
+    if (isNecessary(IDX, N, getConst(IF))) then
+        basisCheck(AL, AL', IF, N, MAX, IDX, V0, V0')
     else
-        checkWithBasis*(AL, AL', IF, N, MAX, IDX + 1, V0, V0')
+        nextCheck(AL, AL', IF, N, MAX, IDX + 1, V0, V0')
     fi
     if IDX < MAX .
-    eq checkWithBasis*(AL, AL', IF, N, MAX, IDX, V0, V0') = true [owise] .
+    eq nextCheck(AL, AL', IF, N, MAX, IDX, V0, V0') = true [owise] .
 
-    --- check with a valid basis
-    op checkWithBasis** : ActionList ActionList Info Nat Nat Nat Vect Vect -> Bool .
-    ceq checkWithBasis**(AL, AL', IF, N, MAX, IDX, V0, V0') =
+    --- check with a necessary basis
+    op basisCheck : ActionList ActionList Info Nat Nat Nat Vect Vect -> Bool .
+    ceq basisCheck(AL, AL', IF, N, MAX, IDX, V0, V0') =
     if (V x (V)^+) == (V' x (V')^+) then 
         if (V0 x (V)^+) == (V0' x (V')^+) then
-            checkWithBasis*(AL, AL', IF, N, MAX, IDX + 1, V0, V0')
+            nextCheck(AL, AL', IF, N, MAX, IDX + 1, V0, V0')
         else
             false
         fi 
@@ -131,10 +131,10 @@ fmod EQUIV-CHECK is
     --- [print "\nPhi = " Phi "\nV = " V "\nV' = " V' "\nV0 = " V0 "\nV0' = " V0'] .
 
     --- whether this basis is needed for checking
-    op isValid : Nat Nat IdxSet -> Bool .
-    eq isValid(IDX, N, empty) = true . 
-    eq isValid(IDX, N, (N', IS)) = 
-    if ((IDX & (1 << (N - N' - 1))) > 0) then false else isValid(IDX, N, IS) fi .
+    op isNecessary : Nat Nat IdxSet -> Bool .
+    eq isNecessary(IDX, N, empty) = true . 
+    eq isNecessary(IDX, N, (N', IS)) = 
+    if ((IDX & (1 << (N - N' - 1))) > 0) then false else isNecessary(IDX, N, IS) fi .
 
     --- calculate M x V
     op calWithBasis : ActionList Vect -> Vect .
